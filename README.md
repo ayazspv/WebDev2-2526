@@ -1,2 +1,2 @@
-# WebDev2-2526
+# CircuTrade
 A Marketplace app made in PHP + Vue
