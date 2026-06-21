@@ -118,12 +118,11 @@ switch ($routeInfo[0]) {
         $vars = $routeInfo[2];
 
         if ($handler instanceof Closure) {
-            // Routes like /ping that were defined with a closure instead of a controller
-            $handler($vars);
+            $handler(...array_values($vars));
         } else {
             [$class, $method] = $handler;
             $controller = new $class();
-            $controller->$method($vars);
+            $controller->$method(...array_values($vars));
         }
         break;
 }
