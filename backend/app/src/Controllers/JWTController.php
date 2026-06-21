@@ -2,13 +2,11 @@
 
 namespace App\Controllers;
 
-use App\Framework\Controller;
-
-class JWTController extends Controller {
+class JWTController {
 
     public function generateJWT($user)
     {
-        $secret_key = "VERY_TOP_SECRET";
+        $secret_key = "a8f5f167f44f4964e6c998dee827110c8c5e6b3f8a1d2c3e4f5061728394a5b";
         $issuedAt = time();
         $expirationTime = $issuedAt + 3600;
         $payload = [
@@ -28,19 +26,17 @@ class JWTController extends Controller {
     {
         $headers = getallheaders();
         if (!isset($headers['Authorization'])) {
-            $this->respondWithError(401, 'Authorization token is missing');
-            exit();
+            throw new \RuntimeException('Authorization token is missing', 401);
         }
-
+ 
         $authHeader = $headers['Authorization'];
         $token = str_replace('Bearer ', '', $authHeader);
-
+ 
         try {
             $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key('VERY_TOP_SECRET', 'HS256'));
             return $decoded;
         } catch (\Exception $e) {
-            $this->respondWithError(401, 'Invalid or expired token');
-            exit();
+            throw new \RuntimeException('Invalid or expired token', 401);
         }
     }
 }

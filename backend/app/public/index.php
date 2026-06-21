@@ -27,6 +27,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+ini_set('memory_limit', '256M');
+
+// Enable error reporting for debugging (carried over from the old api.php)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require __DIR__ . '/../vendor/autoload.php';
 
 use FastRoute\RouteCollector;
@@ -36,12 +42,45 @@ use function FastRoute\simpleDispatcher;
  * Define the routes for the application.
  */
 $dispatcher = simpleDispatcher(function (RouteCollector $r) {
-    // Article routes
-    $r->addRoute('GET', '/articles', ['App\Controllers\ArticleController', 'getAll']);
-    $r->addRoute('GET', '/articles/{id}', ['App\Controllers\ArticleController', 'get']);
-    $r->addRoute('POST', '/articles', ['App\Controllers\ArticleController', 'create']);
-    $r->addRoute('PUT', '/articles/{id}', ['App\Controllers\ArticleController', 'update']);
-    $r->addRoute('DELETE', '/articles/{id}', ['App\Controllers\ArticleController', 'delete']);
+    // User routes
+    $r->addRoute('POST', '/login', ['App\Controllers\UserController', 'login']);
+    $r->addRoute('POST', '/register', ['App\Controllers\UserController', 'register']);
+    $r->addRoute('GET', '/me', ['App\Controllers\UserController', 'me']);
+    $r->addRoute('GET', '/users', ['App\Controllers\UserController', 'getAllUsers']);
+    $r->addRoute('GET', '/users/latest', ['App\Controllers\UserController', 'getLatestUser']);
+    $r->addRoute('POST', '/users', ['App\Controllers\UserController', 'addUser']);
+    $r->addRoute('PUT', '/users/{id:\d+}', ['App\Controllers\UserController', 'editUser']);
+    $r->addRoute('DELETE', '/users/{id:\d+}', ['App\Controllers\UserController', 'deleteUser']);
+
+    // Materials routes
+    $r->addRoute('GET', '/materials', ['App\Controllers\MaterialController', 'getAllMaterials']);
+    $r->addRoute('GET', '/materials/highest-stock', ['App\Controllers\MaterialController', 'getHighestStockMaterial']);
+    $r->addRoute('GET', '/materials/quantities', ['App\Controllers\MaterialController', 'getAllQuantities']);
+    $r->addRoute('GET', '/materials/city/{city}', ['App\Controllers\MaterialController', 'getMaterialByCity']);
+    $r->addRoute('GET', '/materials/{id:\d+}', ['App\Controllers\MaterialController', 'getMaterialById']);
+    $r->addRoute('POST', '/materials', ['App\Controllers\MaterialController', 'addMaterial']);
+    $r->addRoute('PUT', '/materials/{id:\d+}', ['App\Controllers\MaterialController', 'editMaterial']);
+    $r->addRoute('DELETE', '/materials/{id:\d+}', ['App\Controllers\MaterialController', 'deleteMaterial']);
+
+    // Orders routes
+    $r->addRoute('GET', '/orders', ['App\Controllers\OrderController', 'getAllOrders']);
+    $r->addRoute('POST', '/orders', ['App\Controllers\OrderController', 'addOrder']);
+    $r->addRoute('GET', '/orders/latest', ['App\Controllers\OrderController', 'getLatestOrder']);
+    $r->addRoute('GET', '/orders/user/{id:\d+}', ['App\Controllers\OrderController', 'getOrdersByUserId']);
+
+    // Order Items routes
+    $r->addRoute('GET', '/orderitems', ['App\Controllers\OrderItemController', 'getAllOrderItems']);
+    $r->addRoute('POST', '/orderitems', ['App\Controllers\OrderItemController', 'addOrderItem']);
+    $r->addRoute('GET', '/orderitems/order/{id:\d+}', ['App\Controllers\OrderItemController', 'getOrderItemsByOrderId']);
+
+    // Test route
+    $r->addRoute('GET', '/test', ['App\Controllers\UserController', 'test']);
+
+    // Ping route (closure, handled separately below since it has no controller class)
+    $r->addRoute('GET', '/ping', function () {
+        header('Content-Type: application/json');
+        echo json_encode(['pong' => true]);
+    });
 });
 
 
@@ -50,6 +89,13 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
  */
 $httpMethod = $_SERVER['REQUEST_METHOD'];
 $uri = strtok($_SERVER['REQUEST_URI'], '?');
+
+// Strip the /api prefix so route definitions don't need to include it
+$uri = preg_replace('#^/api#', '', $uri);
+if ($uri === '') {
+    $uri = '/';
+}
+
 $routeInfo = $dispatcher->dispatch($httpMethod, $uri);
 
 /**
@@ -68,10 +114,16 @@ switch ($routeInfo[0]) {
         break;
     // Handle found routes
     case FastRoute\Dispatcher::FOUND:
-        $class = $routeInfo[1][0];
-        $method = $routeInfo[1][1];
-        $controller = new $class();
+        $handler = $routeInfo[1];
         $vars = $routeInfo[2];
-        $controller->$method($vars);
+
+        if ($handler instanceof Closure) {
+            // Routes like /ping that were defined with a closure instead of a controller
+            $handler($vars);
+        } else {
+            [$class, $method] = $handler;
+            $controller = new $class();
+            $controller->$method($vars);
+        }
         break;
 }

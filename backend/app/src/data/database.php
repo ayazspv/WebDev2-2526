@@ -6,7 +6,7 @@ use PDO;
 use PDOException;
 
 class Database {
-    private $host = "db";
+    private $host = "mysql";
     private $db_name = "CircuTrade";
     private $username = "dbmanager";
     private $password = "dbpassword";
