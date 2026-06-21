@@ -107,3 +107,9 @@ For detailed frontend documentation, see [frontend/README.md](./frontend/README.
 
 - Ensure that the backend is running and accessible at the correct base URL (`http://localhost/api/`).
 - Double-check CORS and Docker/Nginx configuration if you encounter connection problems.
+
+### More Information
+
+For the full development history, you can check the repository for this project via de link below:
+
+https://github.com/ayazspv/WebDev2-2526
