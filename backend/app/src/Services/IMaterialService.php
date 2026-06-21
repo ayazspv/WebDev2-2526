@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Services;
+
+interface IMaterialService
+{
+    public function addMaterial($material);
+    public function editMaterial($material);
+    public function deleteMaterial($id);
+    public function getMaterialById($id);
+    public function getMaterialByCity($city);
+    public function getAllMaterials();
+    public function getHighestStockMaterial();
+    public function getAllQuantities();
+}
