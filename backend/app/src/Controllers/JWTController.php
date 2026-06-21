@@ -33,7 +33,7 @@ class JWTController {
         $token = str_replace('Bearer ', '', $authHeader);
  
         try {
-            $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key('VERY_TOP_SECRET', 'HS256'));
+            $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key('a8f5f167f44f4964e6c998dee827110c8c5e6b3f8a1d2c3e4f5061728394a5b', 'HS256'));
             return $decoded;
         } catch (\Exception $e) {
             throw new \RuntimeException('Invalid or expired token', 401);
